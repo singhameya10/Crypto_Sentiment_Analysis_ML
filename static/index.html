@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoPrec - BTC Price Prediction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar {
+            background-color: #007bff;
+            padding: 10px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .footer {
+            background-color: #007bff;
+            padding: 10px;
+            color: #fff;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+        }
+
+        .footer p {
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button .loader {
+            position: absolute;
+            top: 50%;
+            right: 10px; /* Adjust the right offset */
+            transform: translateY(-50%);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            border-top: 3px solid transparent;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translateY(-50%) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-50%) rotate(360deg);
+            }
+        }
+
+        .loading .loader {
+            opacity: 1;
+        }
+
+        #result {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h2>CryptoPrec</h2>
+        <nav>
+            <a href="#">Home</a> |
+            <a href="#">About</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h1>BTC Price Prediction</h1>
+        
+        <button id="updateDatasetBtn">Update Dataset<span class="loader"></span></button>
+        <button id="trainModelBtn" style="display: none;">Train Model<span class="loader"></span></button>
+        <button id="testModelBtn" style="display: none;">Test Model<span class="loader"></span></button>
+        
+        <div id="result"></div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2024 CryptoPrec. All rights reserved.</p>
+    </div>
+
+    <script>
+        function setLoadingState(buttonId, loading) {
+            const button = document.getElementById(buttonId);
+            const loader = button.querySelector('.loader');
+            if (loading) {
+                button.classList.add('loading');
+                loader.style.opacity = '1';
+            } else {
+                button.classList.remove('loading');
+                loader.style.opacity = '0';
+            }
+        }
+
+        document.getElementById('updateDatasetBtn').addEventListener('click', function() {
+            setLoadingState('updateDatasetBtn', true);
+            fetch('/update_dataset')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerHTML = data.message;
+                    document.getElementById('trainModelBtn').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerHTML = 'Failed to update dataset';
+                })
+                .finally(() => {
+                    setLoadingState('updateDatasetBtn', false);
+                });
+        });
+
+        document.getElementById('trainModelBtn').addEventListener('click', function() {
+            setLoadingState('trainModelBtn', true);
+            fetch('/train_model')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerHTML = data.message;
+                    document.getElementById('testModelBtn').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerHTML = 'Failed to train model';
+                })
+                .finally(() => {
+                    setLoadingState('trainModelBtn', false);
+                });
+        });
+
+        document.getElementById('testModelBtn').addEventListener('click', function() {
+            setLoadingState('testModelBtn', true);
+            fetch('/test_model')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('result').innerHTML = `'Prediction: '  ${data.prediction} \n <br>  Accuracy : ${data.accuracy}`
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerHTML = 'Failed to test model';
+                })
+                .finally(() => {
+                    setLoadingState('testModelBtn', false);
+                });
+        });
+
+        function checkModelState() {
+            fetch('/check_model_state')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.model_updated) {
+                        document.getElementById('trainModelBtn').style.display = 'block';
+                    }
+                    if (data.model_trained) {
+                        document.getElementById('testModelBtn').style.display = 'block';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        checkModelState();
+    </script>
+</body>
+</html>
